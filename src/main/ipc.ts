@@ -19,6 +19,7 @@ interface IpcMainAction {
 
 export const ipcMainAction: IpcMainAction = {
   on: [
+    chatWithOllama,
     {
       channel: CHANNELS.WINDOW_ACTION,
       handle: (event, action) => {
@@ -43,6 +44,5 @@ export const ipcMainAction: IpcMainAction = {
       channel: "abc",
       handle: (event, action) => {},
     },
-    chatWithOllama,
   ],
 };

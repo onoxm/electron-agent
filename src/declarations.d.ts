@@ -1,11 +1,16 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
-import { WindowAction } from "./types";
+import { type AgentOptions, WindowAction } from "./types";
 
 declare module "*.css";
 
 export interface IElectronAPI {
   windowAction: (action: WindowAction) => void;
-  chatWithOllama: (options: AgentOptions) => Promise<any>;
+  chatWithAgent: (
+    options: AgentOptions,
+    onChunk: (content: string) => void,
+    onDone?: () => void,
+    onError?: (message: string) => void,
+  ) => void;
 }
 
 declare global {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Message, Model } from "../types";
+import { Message, Model, modelList, WindowAction } from "../types";
 
 export default () => {
   const windowAction = window.electronAPI.windowAction;
@@ -7,25 +7,52 @@ export default () => {
   const [value, setValue] = useState("");
   const [model, setModel] = useState<Model>("deepseek-r1");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  const modelList: Model[] = ["deepseek-r1", "llama3", "qwen3.8"];
+  const handleSendMessage = () => {
+    if (!value || isStreaming) return;
 
-  const handleSendMessage = async () => {
     const currentMessages: Message[] = [
       ...messages,
       { role: "user", content: value },
     ];
     setValue("");
-    setMessages(currentMessages);
-    const data = (await window.electronAPI.chatWithOllama({
-      model,
-      messages: currentMessages,
-    })) as {
-      message: Message;
-    };
-    setMessages((prev) => [...prev, data.message]);
+    // 先追加一条空的 assistant 消息，流式分片都往这条里拼
+    setMessages([...currentMessages, { role: "assistant", content: "" }]);
+    setIsStreaming(true);
+
+    window.electronAPI.chatWithAgent(
+      {
+        model,
+        messages: currentMessages,
+      },
+      (content) => {
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          next[next.length - 1] = {
+            ...last,
+            content: last.content + content,
+          };
+          return next;
+        });
+      },
+      () => setIsStreaming(false),
+      (message) => {
+        setMessages((prev) => {
+          const next = [...prev];
+          const last = next[next.length - 1];
+          next[next.length - 1] = {
+            ...last,
+            content: `${last.content}\n请求失败：${message}`,
+          };
+          return next;
+        });
+        setIsStreaming(false);
+      },
+    );
   };
 
   useEffect(() => {
@@ -34,8 +61,8 @@ export default () => {
   }, [messages]);
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center gap-4">
-      {/* <div className="flex items-center justify-center gap-4">
+    <div className="w-screen h-screen flex flex-col items-center justify-between gap-4 p-4">
+      <div className="flex items-center justify-center gap-4">
         <button
           className="cursor-pointer"
           onClick={() => windowAction(WindowAction.Minimize)}
@@ -54,7 +81,7 @@ export default () => {
         >
           close
         </button>
-      </div> */}
+      </div>
 
       <div className="flex flex-col items-center justify-center gap-4">
         <div
@@ -83,6 +110,7 @@ export default () => {
 
           <select
             className="ml-4 cursor-pointer px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-gray-300"
+            disabled={isStreaming}
             value={model}
             onChange={(e) => setModel(e.target.value as Model)}
           >
@@ -94,10 +122,11 @@ export default () => {
           </select>
 
           <button
-            className="cursor-pointer ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="cursor-pointer ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSendMessage}
+            disabled={isStreaming}
           >
-            send
+            {isStreaming ? "生成中..." : "发送"}
           </button>
         </div>
       </div>
