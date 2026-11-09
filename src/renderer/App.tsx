@@ -86,7 +86,7 @@ export default () => {
       <div className="flex flex-col items-center justify-center gap-4">
         <div
           ref={messagesRef}
-          className="w-[633px] flex flex-col gap-2 overflow-y-auto border border-gray-300 rounded-lg p-4 max-h-96 overflow-x-hidden overflow-y-auto"
+          className="w-[633px] h-100 flex flex-col gap-2 overflow-y-auto border border-gray-300 rounded-lg p-4 overflow-x-hidden overflow-y-auto"
         >
           {messages.map(({ role, content }, i) => (
             <p key={i}>

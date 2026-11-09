@@ -48,9 +48,15 @@
     "vite": "^8.3.6"
   },
   "dependencies": {
+    "@langchain/core": "^1.2.17",
+    "@langchain/langgraph": "^1.5.0",
+    "@langchain/ollama": "^1.3.0",
+    "@langchain/openai": "^1.8.2",
     "electron-squirrel-startup": "^1.0.1",
+    "langchain": "^1.5.16",
     "ono-fetch": "^0.5.2",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
   }
 }
