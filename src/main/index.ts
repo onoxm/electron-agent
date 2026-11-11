@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, Tray } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 import { ipcMainAction } from "./ipc";
+import { createTray } from "./tray";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -31,11 +32,32 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
+let tray: Tray;
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
+
+  // const appMenu = Menu.getApplicationMenu()?.items ?? [];
+
+  // const menuTemplate: MenuItemConstructorOptions[] = [
+  //   {
+  //     role: "help",
+  //     submenu: [
+  //       {
+  //         label: "Documentation",
+  //         click: () => {
+  //           shell.openExternal("https://space.bilibili.com/824806");
+  //         },
+  //       },
+  //     ],
+  //   },
+  // ];
+
+  // const menu = Menu.buildFromTemplate([...appMenu, ...menuTemplate]);
+  // Menu.setApplicationMenu(menu);
 
   ipcMainAction.on.forEach(({ channel, handle }) =>
     ipcMain.on(channel, handle),
@@ -44,6 +66,8 @@ app.whenReady().then(() => {
   ipcMainAction.handle.forEach(({ channel, handle }) =>
     ipcMain.handle(channel, handle),
   );
+
+  tray = createTray();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.

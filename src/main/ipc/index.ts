@@ -18,7 +18,7 @@ export const ipcMainAction: IpcMainAction = {
   handle: [
     {
       channel: "abc",
-      handle: (event, action) => {},
+      handle: (_event, _action) => {},
     },
   ],
 };
